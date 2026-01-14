@@ -1,0 +1,26 @@
+{
+  "name": "folder-watcher-sidecar",
+  "version": "1.0.0",
+  "description": "File watcher sidecar for Folder Watcher app",
+  "main": "build/index.js",
+  "bin": "build/index.js",
+  "scripts": {
+    "build": "tsc",
+    "package": "npm run build && pkg . --targets node18-macos-x64,node18-macos-arm64,node18-win-x64,node18-linux-x64 --out-path ../src-tauri/binaries",
+    "package:mac": "npm run build && pkg . --target node18-macos-arm64 --output ../src-tauri/binaries/watcher-sidecar-aarch64-apple-darwin"
+  },
+  "pkg": {
+    "scripts": "build/**/*.js",
+    "assets": []
+  },
+  "dependencies": {
+    "chokidar": "^4.0.0",
+    "uuid": "^9.0.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.0.0",
+    "@types/node": "^20.0.0",
+    "@types/uuid": "^9.0.0",
+    "pkg": "^5.8.0"
+  }
+}
