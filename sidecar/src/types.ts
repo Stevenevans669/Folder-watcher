@@ -22,7 +22,8 @@ export interface SidecarEvent {
     | 'directory_added'
     | 'directory_removed'
     | 'directories_loaded'
-    | 'ready';
+    | 'ready'
+    | 'api_server_started';
   payload: {
     id?: string;
     path?: string;
@@ -31,5 +32,6 @@ export interface SidecarEvent {
     timestamp?: number;
     message?: string;
     directories?: WatchedDir[];
+    port?: number;
   };
 }

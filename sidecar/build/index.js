@@ -38,9 +38,26 @@ const fs = __importStar(require("fs"));
 const protocol_1 = require("./protocol");
 const watcher_1 = require("./watcher");
 const storage_1 = require("./storage");
+const api_server_1 = require("./api-server");
+const api_types_1 = require("./api-types");
 let directories = [];
+/**
+ * Getter function for API server to access current directories
+ */
+function getDirectories() {
+    return directories;
+}
 async function initialize() {
     directories = (0, storage_1.loadDirectories)();
+    // Start API server
+    try {
+        const port = await (0, api_server_1.startApiServer)(getDirectories, api_types_1.API_PORT);
+        (0, protocol_1.sendEvent)({ type: 'api_server_started', payload: { port } });
+    }
+    catch (err) {
+        const message = err instanceof Error ? err.message : String(err);
+        (0, protocol_1.sendEvent)({ type: 'error', payload: { message: `API server failed to start: ${message}` } });
+    }
     // Start watching saved directories
     const validDirectories = [];
     for (const dir of directories) {
@@ -111,11 +128,20 @@ async function handleCommand(cmd) {
             break;
         }
         case 'shutdown': {
+            await (0, api_server_1.stopApiServer)();
             (0, watcher_1.closeAllWatchers)();
             process.exit(0);
         }
     }
 }
+// Handle process termination
+async function gracefulShutdown() {
+    await (0, api_server_1.stopApiServer)();
+    (0, watcher_1.closeAllWatchers)();
+    process.exit(0);
+}
+process.on('SIGINT', () => gracefulShutdown());
+process.on('SIGTERM', () => gracefulShutdown());
 // Start the sidecar
 (0, protocol_1.createProtocol)(handleCommand);
 initialize().catch((error) => {

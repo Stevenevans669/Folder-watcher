@@ -10,7 +10,7 @@ export interface SidecarCommand {
     };
 }
 export interface SidecarEvent {
-    type: 'file_change' | 'error' | 'directory_added' | 'directory_removed' | 'directories_loaded' | 'ready';
+    type: 'file_change' | 'error' | 'directory_added' | 'directory_removed' | 'directories_loaded' | 'ready' | 'api_server_started';
     payload: {
         id?: string;
         path?: string;
@@ -19,5 +19,6 @@ export interface SidecarEvent {
         timestamp?: number;
         message?: string;
         directories?: WatchedDir[];
+        port?: number;
     };
 }

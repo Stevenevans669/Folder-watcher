@@ -4,11 +4,29 @@ import { createProtocol, sendEvent } from './protocol';
 import { addWatcher, removeWatcher, closeAllWatchers } from './watcher';
 import { loadDirectories, saveDirectories } from './storage';
 import { WatchedDir, SidecarCommand } from './types';
+import { startApiServer, stopApiServer } from './api-server';
+import { API_PORT } from './api-types';
 
 let directories: WatchedDir[] = [];
 
+/**
+ * Getter function for API server to access current directories
+ */
+function getDirectories(): WatchedDir[] {
+  return directories;
+}
+
 async function initialize(): Promise<void> {
   directories = loadDirectories();
+
+  // Start API server
+  try {
+    const port = await startApiServer(getDirectories, API_PORT);
+    sendEvent({ type: 'api_server_started', payload: { port } });
+  } catch (err) {
+    const message = err instanceof Error ? err.message : String(err);
+    sendEvent({ type: 'error', payload: { message: `API server failed to start: ${message}` } });
+  }
 
   // Start watching saved directories
   const validDirectories: WatchedDir[] = [];
@@ -89,11 +107,22 @@ async function handleCommand(cmd: SidecarCommand): Promise<void> {
     }
 
     case 'shutdown': {
+      await stopApiServer();
       closeAllWatchers();
       process.exit(0);
     }
   }
 }
+
+// Handle process termination
+async function gracefulShutdown(): Promise<void> {
+  await stopApiServer();
+  closeAllWatchers();
+  process.exit(0);
+}
+
+process.on('SIGINT', () => gracefulShutdown());
+process.on('SIGTERM', () => gracefulShutdown());
 
 // Start the sidecar
 createProtocol(handleCommand);

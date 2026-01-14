@@ -36,6 +36,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.createProtocol = createProtocol;
 exports.sendEvent = sendEvent;
 const readline = __importStar(require("readline"));
+const event_bus_1 = require("./event-bus");
 function createProtocol(onCommand) {
     const rl = readline.createInterface({
         input: process.stdin,
@@ -55,6 +56,12 @@ function createProtocol(onCommand) {
         process.exit(0);
     });
 }
+/**
+ * Send event to both stdout (for Tauri) and event bus (for WebSocket clients)
+ */
 function sendEvent(event) {
+    // Output to stdout for Tauri
     console.log(JSON.stringify(event));
+    // Emit to event bus for WebSocket clients
+    event_bus_1.eventBus.emit(event);
 }
